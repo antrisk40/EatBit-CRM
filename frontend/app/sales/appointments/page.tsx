@@ -6,6 +6,7 @@ import Calendar from '@/components/shared/Calendar';
 import AppointmentRequestModal from '@/components/shared/AppointmentRequestModal';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import Link from 'next/link';
 import { 
   Calendar as CalendarIcon, 
   Clock, 

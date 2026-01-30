@@ -44,7 +44,7 @@ export default function AdminClientsPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error, status } = await supabase
         .from('clients')
         .select(`
           *,
@@ -55,7 +55,7 @@ export default function AdminClientsPage() {
       if (error) {
         console.error('Error fetching clients:', error);
         // Check if it's an auth error
-        if (error.message?.includes('JWT') || error.message?.includes('token') || error.message?.includes('expired') || error.status === 401) {
+        if (error.message?.includes('JWT') || error.message?.includes('token') || error.message?.includes('expired') || status === 401) {
           // Try to refresh session
           const { error: refreshError } = await supabase.auth.refreshSession();
           if (refreshError) {
