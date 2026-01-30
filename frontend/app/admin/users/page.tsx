@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Select from '@/components/ui/Select';
+import { adminCreateUser, adminUpdateUser } from './actions';
 
 interface User {
   id: string;
@@ -100,32 +101,13 @@ export default function AdminUsersPage() {
       return;
     }
 
-    const supabase = createClient();
-    
+    setLoading(true);
     try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUser.email,
-        password: newUser.password,
-        email_confirm: true,
-      });
+      const result = await adminCreateUser(newUser);
 
-      if (authError) throw authError;
-
-      // Create profile with email
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          full_name: newUser.full_name,
-          email: newUser.email, // Store email in profiles table
-          role: newUser.role,
-          status: 'active',
-          salary: newUser.salary ? parseFloat(newUser.salary) : null,
-          auto_logout_minutes: 30, // Default to 30 minutes
-        });
-
-      if (profileError) throw profileError;
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       toast.success('User created successfully!');
       setShowCreateModal(false);
@@ -134,37 +116,20 @@ export default function AdminUsersPage() {
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateUser = async () => {
     if (!editingUser) return;
 
-    const supabase = createClient();
-    
+    setLoading(true);
     try {
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: editingUser.full_name,
-          role: editingUser.role,
-          status: editingUser.status,
-          salary: editingUser.salary,
-          auto_logout_minutes: editingUser.auto_logout_minutes,
-        })
-        .eq('id', editingUser.id);
+      const result = await adminUpdateUser(editingUser.id, editingUser);
 
-      if (profileError) throw profileError;
-
-      // Update password if provided
-      if (editingUser.password && editingUser.password.length >= 6) {
-        const { error: passwordError } = await supabase.auth.admin.updateUserById(
-          editingUser.id,
-          { password: editingUser.password }
-        );
-
-        if (passwordError) throw passwordError;
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       toast.success(editingUser.password ? 'User and password updated successfully!' : 'User updated successfully!');
@@ -174,6 +139,8 @@ export default function AdminUsersPage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to update user');
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
